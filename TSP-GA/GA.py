@@ -40,6 +40,7 @@ class GA(object):
     def __mFunc(self, gene):
         
         r = random.randint(0, self.geneLength - 1)
+#        gene[r] = ("0", "1")[gene[r] == "1"]
         gene = gene[:r] + ("0", "1")[gene[r:r] == "1"] + gene[r + 1:]
         return gene
 

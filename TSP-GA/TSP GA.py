@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
-
 import sys
 import random
 import math
 import time
 import Tkinter
 import threading
+import time
+import numpy as np
+import matplotlib.pyplot as plt
 
 # 城市坐标
 distance_x = [
     178,272,176,171,650,499,267,703,408,437,491,74,532,
-    416,626,42,271,359,163,508,229,576,147,560,35,714,
+   416,626,42,271,359,163,508,229,576,147,560,35,714,
     757,517,64,314,675,690,391,628,87,240,705,699,258,
     428,614,36,360,482,666,597,209,201,492,294]
 distance_y = [
@@ -18,6 +20,10 @@ distance_y = [
     381,244,330,395,169,141,380,153,442,528,329,232,48,
     498,265,343,120,165,50,433,63,491,275,348,222,288,
     490,213,524,244,114,104,552,70,425,227,331]
+
+# 随机城市坐标
+#distance_x = [random.randrange(50,750) for i in range(50)]
+#distance_y = [random.randrange(50,550) for i in range(50)]
 
 # 遗传算法类
 from GA import GA
@@ -32,8 +38,10 @@ class MyTSP(object):
         self.root = root                               
         self.width = width      
         self.height = height
-        # 城市数目初始化为32
+        # 城市数目初始化为32 (TaQini: 0x32)
         self.n = n
+        # 阈值用于终止进化
+        self.threshold = 3000
         # Tkinter.Canvas
         self.canvas = Tkinter.Canvas(
                 root,
@@ -41,12 +49,14 @@ class MyTSP(object):
                 height = self.height,
                 bg = "#EBEBEB",             # 背景白色 
                 xscrollincrement = 1,
-                yscrollincrement = 1
+               yscrollincrement = 1
             )
         self.canvas.pack(expand = Tkinter.YES, fill = Tkinter.BOTH)
         self.title("TSP遗传算法(n:随机初始 e:开始进化 s:停止进化 q:退出程序)")
         self.__r = 5
         self.__lock = threading.RLock()     # 线程锁
+        
+        self.__best_times = [] 
 
         self.__bindEvents()
         self.new()
@@ -178,6 +188,10 @@ class MyTSP(object):
         self.__running = True
         self.__lock.release()
 
+        # 获得最优解的次数
+        t = time.time()
+        g = []
+        log_file = open('times.log','w+')
         while self.__running:
             # 下一步进化
             self.ga.next()
@@ -188,6 +202,30 @@ class MyTSP(object):
             # 更新画布
             self.canvas.update()
             print("迭代次数：%d, 变异次数%d, 最佳路径总距离：%d" % (self.ga.generation, self.ga.mutationCount, self.distance(self.ga.best.gene))) 
+            # 终止进化 add by TaQini
+            dst = self.distance(self.ga.best.gene)
+            # 初始化列表
+            if len(self.__best_times) == 0:
+                self.__best_times.append(dst)
+            # 重置列表，用户忽略突变
+            if dst < self.__best_times[0]:
+                g.append((dst,time.time()-t))
+                self.__best_times = [dst]
+            if dst in self.__best_times:
+                self.__best_times.append(dst)
+            # debug and log
+            # print int(self.__best_times[0]) ,len(self.__best_times)
+            log_file.write('%d %d\n' % (int(self.__best_times[0]),len(self.__best_times)))
+            # 最优解重复出现次数达到阈值（忽略突变），则终止进化
+            if len(self.__best_times) > self.threshold:
+                print "cost: %0.1fs" %( time.time()-t )
+                g = np.array(g)
+                plt.xlabel('distance')
+                plt.ylabel('time/s')
+                plt.plot(g[:,0],g[:,1],'bo')
+                plt.show()
+                log_file.close()
+                break # self.__running = False
 
     # 将节点按order顺序连线
     def line(self, order):
