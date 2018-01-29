@@ -41,7 +41,7 @@ class MyTSP(object):
         # 城市数目初始化为32 (TaQini: 0x32)
         self.n = n
         # 阈值用于终止进化
-        self.threshold = 3000
+        self.threshold = 4126
         # Tkinter.Canvas
         self.canvas = Tkinter.Canvas(
                 root,
@@ -49,7 +49,7 @@ class MyTSP(object):
                 height = self.height,
                 bg = "#EBEBEB",             # 背景白色 
                 xscrollincrement = 1,
-               yscrollincrement = 1
+                yscrollincrement = 1
             )
         self.canvas.pack(expand = Tkinter.YES, fill = Tkinter.BOTH)
         self.title("TSP遗传算法(n:随机初始 e:开始进化 s:停止进化 q:退出程序)")
@@ -201,7 +201,7 @@ class MyTSP(object):
             self.title("TSP遗传算法(n:随机初始 e:开始进化 s:停止进化 q:退出程序) 迭代次数: %d" % self.ga.generation)
             # 更新画布
             self.canvas.update()
-            print("迭代次数：%d, 变异次数%d, 最佳路径总距离：%d" % (self.ga.generation, self.ga.mutationCount, self.distance(self.ga.best.gene))) 
+            # print("迭代次数：%d, 变异次数%d, 最佳路径总距离：%d" % (self.ga.generation, self.ga.mutationCount, self.distance(self.ga.best.gene))) 
             # 终止进化 add by TaQini
             dst = self.distance(self.ga.best.gene)
             # 初始化列表
@@ -214,7 +214,7 @@ class MyTSP(object):
             if dst in self.__best_times:
                 self.__best_times.append(dst)
             # debug and log
-            # print int(self.__best_times[0]) ,len(self.__best_times)
+            print int(self.__best_times[0]) ,len(self.__best_times)
             log_file.write('%d %d\n' % (int(self.__best_times[0]),len(self.__best_times)))
             # 最优解重复出现次数达到阈值（忽略突变），则终止进化
             if len(self.__best_times) > self.threshold:
@@ -270,10 +270,14 @@ if __name__ == "__main__":
     print u""" 
 --------------------------------------------------------
     程序：遗传算法解决TPS问题程序 
-    作者：许彬 
+    作者：许彬
     日期：2015-12-10
     语言：Python 2.7 
 -------------------------------------------------------- 
+    修改：增加阈值以终止进化
+    作者：刘天祺
+    日期：Jan 29 2018
+    语言：python 2.7
+-------------------------------------------------------- 
     """
-    
     MyTSP(Tkinter.Tk()).mainloop()

@@ -3,7 +3,7 @@
 import pandas as pd
 from sys import argv
 log_file = argv[1]
-a = 1.2
+a = 1.5
 df = pd.read_csv(log_file, sep=' ').values
 best = df[-1][0]
 maxt = 0
