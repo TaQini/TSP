@@ -6,6 +6,9 @@ import sys
 import math
 import Tkinter
 import threading
+import time
+import numpy as np
+import matplotlib.pyplot as plt
 
 # 参数
 (ALPHA, BETA, RHO, Q) = (1.0,2.0,0.5,100.0)
@@ -135,6 +138,9 @@ class TSP(object):
 
     def __init__(self, root, width = 800, height = 600, n = city_num):
 
+        self.threshold = 166         # 阈值用于终止算法
+        self.__best_times = []       # 记录局部最优解出现的次数
+
         # 创建画布
         self.root = root                               
         self.width = width      
@@ -263,18 +269,35 @@ class TSP(object):
         self.__running = True
         self.__lock.release()
         
+        t = time.time()                    # 算法起始时间
+        g = []                             # 更优解出现时，记录其值与对应耗时
+        log_file = open('times.log','w+')  # 日志文件
+
         while self.__running:
             # 遍历每一只蚂蚁
             for ant in self.ants:
+                if len(self.__best_times) == 0:
+                    self.__best_times = [int(ant.total_distance)]
                 # 搜索一条路径
                 ant.search_path()
                 # 与当前最优蚂蚁比较
                 if ant.total_distance < self.best_ant.total_distance:
                     # 更新最优解
                     self.best_ant = copy.deepcopy(ant)
+                    # 重置次数列表
+                    self.__best_times = [int(self.best_ant.total_distance)]
+                    # 记录更有解的值与对应耗时
+                    g.append((self.best_ant.total_distance,time.time()-t))
             # 更新信息素
             self.__update_pheromone_gragh()
-            print u"迭代次数：",self.iter,u"最佳路径总距离：",int(self.best_ant.total_distance)
+            # 添加至次数列表
+            self.__best_times.append(int(self.best_ant.total_distance))
+
+            # print u"迭代次数：",self.iter,u"最佳路径总距离：",int(self.best_ant.total_distance)
+            # debug and log
+            print int(self.__best_times[0]) ,len(self.__best_times)
+            log_file.write('%d %d\n' % (int(self.__best_times[0]),len(self.__best_times)))
+
             # 连线
             self.line(self.best_ant.path)
             # 设置标题
@@ -282,6 +305,16 @@ class TSP(object):
             # 更新画布
             self.canvas.update()
             self.iter += 1
+            # 当局部最优解迭代次数超过阈值时，终止算法
+            if len(self.__best_times) > self.threshold:
+                print "cost: %0.1fs" %( time.time()-t )
+                g = np.array(g)
+                plt.xlabel('distance')
+                plt.ylabel('time/s')
+                plt.plot(g[:,0],g[:,1],'bo')
+                plt.show()
+                log_file.close()
+                break
 
     # 更新信息素
     def __update_pheromone_gragh(self):
@@ -309,11 +342,16 @@ class TSP(object):
 if __name__ == '__main__':
 
     print u""" 
---------------------------------------------------------
+-------------------------------------------------------- 
     程序：蚁群算法解决TPS问题程序 
     作者：许彬 
     日期：2015-12-10
     语言：Python 2.7 
+-------------------------------------------------------- 
+    修改：增加阈值用于终止算法
+    作者：刘天祺
+    日期：Jan 30 2018
+    语言：python 2.7
 -------------------------------------------------------- 
     """ 
     TSP(Tkinter.Tk()).mainloop()

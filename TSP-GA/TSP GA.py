@@ -41,7 +41,7 @@ class MyTSP(object):
         # 城市数目初始化为32 (TaQini: 0x32)
         self.n = n
         # 阈值用于终止进化
-        self.threshold = 4126
+        self.threshold = 3165
         # Tkinter.Canvas
         self.canvas = Tkinter.Canvas(
                 root,
@@ -56,7 +56,8 @@ class MyTSP(object):
         self.__r = 5
         self.__lock = threading.RLock()     # 线程锁
         
-        self.__best_times = [] 
+        # 记录局部最优解出现的次数
+        self.__best_times = []
 
         self.__bindEvents()
         self.new()
@@ -188,10 +189,10 @@ class MyTSP(object):
         self.__running = True
         self.__lock.release()
 
-        # 获得最优解的次数
-        t = time.time()
-        g = []
-        log_file = open('times.log','w+')
+        t = time.time()                    # 算法起始时间
+        g = []                             # 更优解出现时，记录其值与对应耗时
+        log_file = open('times.log','w+')  # 日志文件
+
         while self.__running:
             # 下一步进化
             self.ga.next()
@@ -209,7 +210,9 @@ class MyTSP(object):
                 self.__best_times.append(dst)
             # 重置列表，用户忽略突变
             if dst < self.__best_times[0]:
+                # 记录更有解的值与对应耗时
                 g.append((dst,time.time()-t))
+                # 重置次数列表
                 self.__best_times = [dst]
             if dst in self.__best_times:
                 self.__best_times.append(dst)
